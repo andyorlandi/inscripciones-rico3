@@ -123,6 +123,10 @@ export default function CommissionsPreview({
                 <span className="font-medium ml-1">{commission.studentCount}</span>
               </div>
               <div>
+                <span className="text-gray-600">Varones:</span>
+                <span className="font-medium ml-1">{commission.masculinoCount}</span>
+              </div>
+              <div>
                 <span className="text-gray-600">Recursantes:</span>
                 <span className="font-medium ml-1">{commission.recursantesCount}</span>
               </div>

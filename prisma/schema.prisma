@@ -12,6 +12,7 @@ model Student {
   name               String
   email              String   @unique
   dni                String   @unique
+  gender             String
   personalCode       String   @unique @map("personal_code")
   dg1Catedra         String   @map("dg1_catedra")
   dg1Otra            String?  @map("dg1_otra")

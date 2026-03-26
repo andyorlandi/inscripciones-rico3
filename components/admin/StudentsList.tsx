@@ -48,6 +48,16 @@ export default function StudentsList({ students }: StudentsListProps) {
     return catedra;
   };
 
+  const getGenderDisplay = (gender: string) => {
+    const genderMap: { [key: string]: string } = {
+      'masculino': 'M',
+      'femenino': 'F',
+      'otro': 'Otro',
+      'prefiero_no_decir': 'N/D'
+    };
+    return genderMap[gender] || gender;
+  };
+
   return (
     <div className="card">
       <div className="mb-6">
@@ -76,6 +86,9 @@ export default function StudentsList({ students }: StudentsListProps) {
               </th>
               <th className="px-3 py-3 text-left font-medium text-gray-700">
                 DNI
+              </th>
+              <th className="px-3 py-3 text-left font-medium text-gray-700">
+                Género
               </th>
               <th className="px-3 py-3 text-left font-medium text-gray-700">
                 Mail
@@ -123,6 +136,9 @@ export default function StudentsList({ students }: StudentsListProps) {
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.dni}
+                </td>
+                <td className="px-3 py-3 text-gray-600 text-center">
+                  {getGenderDisplay(student.gender)}
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.email}

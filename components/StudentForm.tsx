@@ -50,6 +50,7 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
     name: '',
     email: '',
     dni: '',
+    gender: '',
     dg1_catedra: '',
     dg1_otra: '',
     dg2_catedra: '',
@@ -180,6 +181,27 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
             maxLength={8}
           />
           <p className="text-sm text-gray-500 mt-1">Solo números, sin puntos ni espacios</p>
+        </div>
+
+        {/* Género */}
+        <div>
+          <label htmlFor="gender" className="label">
+            Género *
+          </label>
+          <select
+            id="gender"
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            required
+            className="input"
+          >
+            <option value="">Seleccioná una opción</option>
+            <option value="masculino">Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="otro">Otro/No binario</option>
+            <option value="prefiero_no_decir">Prefiero no decir</option>
+          </select>
         </div>
 
         {/* Diseño Gráfico 1 */}

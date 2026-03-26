@@ -19,7 +19,8 @@
       "Bash(vercel whoami:*)",
       "Bash(vercel:*)",
       "Bash(npx prisma db push:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

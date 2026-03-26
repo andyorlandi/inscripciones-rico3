@@ -62,6 +62,10 @@ async function generateStudent(index: number) {
   const dniLength = Math.random() > 0.5 ? 8 : 7;
   const dni = String(Math.floor(Math.random() * Math.pow(10, dniLength))).padStart(dniLength, '0');
 
+  // Generate random gender (aproximadamente 50% masculino, 50% otros)
+  const genders = ['masculino', 'femenino', 'femenino', 'otro'];
+  const gender = randomItem(genders);
+
   // Randomly assign catedras (some will have high scores, some low)
   const dg1Catedra = randomItem(catedrasDG);
   const dg2Catedra = randomItem(catedrasDG);
@@ -95,6 +99,7 @@ async function generateStudent(index: number) {
     name,
     email,
     dni,
+    gender,
     personalCode,
     dg1Catedra,
     dg2Catedra,

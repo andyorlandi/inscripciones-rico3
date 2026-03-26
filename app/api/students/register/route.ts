@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
       name,
       email,
       dni,
+      gender,
       dg1_catedra,
       dg1_otra,
       dg2_catedra,
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!name || !email || !dni || !dg1_catedra || !dg2_catedra ||
+    if (!name || !email || !dni || !gender || !dg1_catedra || !dg2_catedra ||
         !morfo1_catedra || !morfo2_catedra ||
         !tipo1_catedra || !tipo2_catedra || !is_recursante) {
       return NextResponse.json(
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
         name,
         email,
         dni,
+        gender,
         personalCode,
         dg1Catedra: dg1_catedra,
         dg1Otra: dg1_otra || null,

@@ -5,6 +5,7 @@ export interface StudentForExport {
   name: string;
   email: string;
   dni: string;
+  gender: string;
   personal_code: string;
   dg1_catedra: string;
   dg1_otra: string | null;
@@ -31,6 +32,16 @@ function getCatedraValue(catedra: string, otra: string | null): string {
   return catedra;
 }
 
+function getGenderValue(gender: string): string {
+  const genderMap: { [key: string]: string } = {
+    'masculino': 'Masculino',
+    'femenino': 'Femenino',
+    'otro': 'Otro/No binario',
+    'prefiero_no_decir': 'Prefiero no decir'
+  };
+  return genderMap[gender] || gender;
+}
+
 export async function generateExcel(students: StudentForExport[]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
 
@@ -40,6 +51,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
   allSheet.columns = [
     { header: 'Nombre y Apellido', key: 'name', width: 25 },
     { header: 'DNI', key: 'dni', width: 12 },
+    { header: 'Género', key: 'gender', width: 18 },
     { header: 'Mail', key: 'email', width: 30 },
     { header: 'Código personal', key: 'code', width: 15 },
     { header: 'Diseño Gráfico 1', key: 'dg1', width: 20 },
@@ -67,6 +79,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
     allSheet.addRow({
       name: student.name,
       dni: student.dni,
+      gender: getGenderValue(student.gender),
       email: student.email,
       code: student.personal_code,
       dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),
@@ -109,6 +122,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
           sheet.addRow({
             name: student.name,
             dni: student.dni,
+            gender: getGenderValue(student.gender),
             email: student.email,
             code: student.personal_code,
             dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),

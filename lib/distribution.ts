@@ -6,6 +6,7 @@ export interface Student {
   email: string;
   score: number;
   is_recursante: boolean;
+  gender: string;
 }
 
 export interface Commission {
@@ -14,6 +15,7 @@ export interface Commission {
   students: Student[];
   totalScore: number;
   recursantesCount: number;
+  masculinoCount: number;
 }
 
 export const COMMISSIONS = [
@@ -29,13 +31,14 @@ export function distributeStudents(students: Student[]): Commission[] {
     students: [],
     totalScore: 0,
     recursantesCount: 0,
+    masculinoCount: 0,
   }));
 
   // Sort students by score (descending) for balanced distribution
   const sortedStudents = [...students].sort((a, b) => b.score - a.score);
 
   // Assign each student to the commission with lowest total score
-  // while respecting the constraint of ±2 students difference
+  // while respecting constraints: ±2 students difference and gender balance
   for (const student of sortedStudents) {
     // Find commission with lowest score that can accept this student
     const validCommissions = commissions.filter(c => {
@@ -47,11 +50,30 @@ export function distributeStudents(students: Student[]): Commission[] {
         return false;
       }
 
+      // If this student is male, check gender balance
+      if (student.gender === 'masculino') {
+        const maxMasculino = Math.max(...commissions.map(com => com.masculinoCount));
+        const minMasculino = Math.min(...commissions.map(com => com.masculinoCount));
+
+        // Don't allow more than 2 males difference
+        if (maxMasculino - minMasculino >= 2 && c.masculinoCount === maxMasculino) {
+          return false;
+        }
+      }
+
       return true;
     });
 
-    // Sort by total score (ascending) then by student count (ascending)
+    // Sort by multiple criteria:
+    // 1. If student is male, prioritize commissions with fewer males
+    // 2. Then by total score (ascending)
+    // 3. Then by student count (ascending)
     validCommissions.sort((a, b) => {
+      // If student is male, prioritize commissions with fewer males
+      if (student.gender === 'masculino' && a.masculinoCount !== b.masculinoCount) {
+        return a.masculinoCount - b.masculinoCount;
+      }
+
       if (a.totalScore !== b.totalScore) {
         return a.totalScore - b.totalScore;
       }
@@ -64,6 +86,9 @@ export function distributeStudents(students: Student[]): Commission[] {
     targetCommission.totalScore += student.score;
     if (student.is_recursante) {
       targetCommission.recursantesCount++;
+    }
+    if (student.gender === 'masculino') {
+      targetCommission.masculinoCount++;
     }
   }
 
@@ -80,5 +105,6 @@ export function getCommissionStats(commission: Commission) {
       ? Math.round((commission.totalScore / commission.students.length) * 10) / 10
       : 0,
     recursantesCount: commission.recursantesCount,
+    masculinoCount: commission.masculinoCount,
   };
 }
