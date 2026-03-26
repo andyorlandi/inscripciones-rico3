@@ -65,7 +65,10 @@ export async function GET(request: NextRequest) {
     // Generate Excel file
     const buffer = await generateExcel(studentsForExport);
 
-    return new NextResponse(buffer, {
+    // Convert Buffer to Uint8Array for Next.js compatibility
+    const uint8Array = new Uint8Array(buffer);
+
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="inscripciones-dg3-${new Date().toISOString().split('T')[0]}.xlsx"`
