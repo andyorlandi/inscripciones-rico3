@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     const studentsForExport = students.map(s => ({
       name: s.name,
       email: s.email,
+      dni: s.dni,
       personal_code: s.personalCode,
       dg1_catedra: s.dg1Catedra,
       dg1_otra: s.dg1Otra,

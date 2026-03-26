@@ -49,6 +49,7 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    dni: '',
     dg1_catedra: '',
     dg1_otra: '',
     dg2_catedra: '',
@@ -159,6 +160,26 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
             className="input"
             placeholder="tu.email@ejemplo.com"
           />
+        </div>
+
+        {/* DNI */}
+        <div>
+          <label htmlFor="dni" className="label">
+            DNI *
+          </label>
+          <input
+            type="text"
+            id="dni"
+            name="dni"
+            value={formData.dni}
+            onChange={handleChange}
+            required
+            pattern="[0-9]{7,8}"
+            className="input"
+            placeholder="Ej: 12345678"
+            maxLength={8}
+          />
+          <p className="text-sm text-gray-500 mt-1">Solo números, sin puntos ni espacios</p>
         </div>
 
         {/* Diseño Gráfico 1 */}

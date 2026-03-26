@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const {
       name,
       email,
+      dni,
       dg1_catedra,
       dg1_otra,
       dg2_catedra,
@@ -27,11 +28,19 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!name || !email || !dg1_catedra || !dg2_catedra ||
+    if (!name || !email || !dni || !dg1_catedra || !dg2_catedra ||
         !morfo1_catedra || !morfo2_catedra ||
         !tipo1_catedra || !tipo2_catedra || !is_recursante) {
       return NextResponse.json(
         { error: 'Todos los campos obligatorios deben ser completados' },
+        { status: 400 }
+      );
+    }
+
+    // Validate DNI format (7-8 digits)
+    if (!/^\d{7,8}$/.test(dni)) {
+      return NextResponse.json(
+        { error: 'El DNI debe tener 7 u 8 dígitos' },
         { status: 400 }
       );
     }
@@ -49,13 +58,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email already exists
-    const existingStudent = await prisma.student.findUnique({
+    const existingEmail = await prisma.student.findUnique({
       where: { email }
     });
 
-    if (existingStudent) {
+    if (existingEmail) {
       return NextResponse.json(
         { error: 'Este mail ya está registrado' },
+        { status: 409 }
+      );
+    }
+
+    // Check if DNI already exists
+    const existingDni = await prisma.student.findUnique({
+      where: { dni }
+    });
+
+    if (existingDni) {
+      return NextResponse.json(
+        { error: 'Este DNI ya está registrado' },
         { status: 409 }
       );
     }
@@ -84,6 +105,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
+        dni,
         personalCode,
         dg1Catedra: dg1_catedra,
         dg1Otra: dg1_otra || null,

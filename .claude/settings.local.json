@@ -14,7 +14,12 @@
       "Bash(git commit:*)",
       "Bash(gh auth:*)",
       "Bash(gh repo create:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git push:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma:*)"
     ]
   }
 }

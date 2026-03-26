@@ -75,6 +75,9 @@ export default function StudentsList({ students }: StudentsListProps) {
                 Nombre {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th className="px-3 py-3 text-left font-medium text-gray-700">
+                DNI
+              </th>
+              <th className="px-3 py-3 text-left font-medium text-gray-700">
                 Mail
               </th>
               <th className="px-3 py-3 text-left font-medium text-gray-700">
@@ -117,6 +120,9 @@ export default function StudentsList({ students }: StudentsListProps) {
               <tr key={student.id} className="hover:bg-gray-50">
                 <td className="px-3 py-3 font-medium text-gray-900">
                   {student.name}
+                </td>
+                <td className="px-3 py-3 text-gray-600">
+                  {student.dni}
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.email}

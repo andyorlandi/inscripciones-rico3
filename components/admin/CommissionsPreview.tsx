@@ -145,6 +145,9 @@ export default function CommissionsPreview({
                   <div className="font-medium text-gray-900 mb-1">
                     {student.name}
                   </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    DNI: {student.dni}
+                  </div>
                   <div className="text-gray-600 mb-2">
                     Score: {student.score}
                     {student.is_recursante && (

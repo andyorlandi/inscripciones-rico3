@@ -58,6 +58,10 @@ async function generateStudent(index: number) {
   const name = `${firstName} ${lastName}`;
   const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${index}@example.com`;
 
+  // Generate random DNI (7 or 8 digits)
+  const dniLength = Math.random() > 0.5 ? 8 : 7;
+  const dni = String(Math.floor(Math.random() * Math.pow(10, dniLength))).padStart(dniLength, '0');
+
   // Randomly assign catedras (some will have high scores, some low)
   const dg1Catedra = randomItem(catedrasDG);
   const dg2Catedra = randomItem(catedrasDG);
@@ -90,6 +94,7 @@ async function generateStudent(index: number) {
   return {
     name,
     email,
+    dni,
     personalCode,
     dg1Catedra,
     dg2Catedra,

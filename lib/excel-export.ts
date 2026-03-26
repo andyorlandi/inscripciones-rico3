@@ -4,6 +4,7 @@ import { COMMISSIONS } from './distribution';
 export interface StudentForExport {
   name: string;
   email: string;
+  dni: string;
   personal_code: string;
   dg1_catedra: string;
   dg1_otra: string | null;
@@ -38,6 +39,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
 
   allSheet.columns = [
     { header: 'Nombre y Apellido', key: 'name', width: 25 },
+    { header: 'DNI', key: 'dni', width: 12 },
     { header: 'Mail', key: 'email', width: 30 },
     { header: 'Código personal', key: 'code', width: 15 },
     { header: 'Diseño Gráfico 1', key: 'dg1', width: 20 },
@@ -64,6 +66,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
   students.forEach(student => {
     allSheet.addRow({
       name: student.name,
+      dni: student.dni,
       email: student.email,
       code: student.personal_code,
       dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),
@@ -105,6 +108,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
         commissionStudents.forEach(student => {
           sheet.addRow({
             name: student.name,
+            dni: student.dni,
             email: student.email,
             code: student.personal_code,
             dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),
