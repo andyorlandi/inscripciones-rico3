@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/inscripciones.db"
+}
+
+model Student {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  email              String   @unique
+  personalCode       String   @unique @map("personal_code")
+  dg1Catedra         String   @map("dg1_catedra")
+  dg1Otra            String?  @map("dg1_otra")
+  dg2Catedra         String   @map("dg2_catedra")
+  dg2Otra            String?  @map("dg2_otra")
+  morfo1Catedra      String   @map("morfo1_catedra")
+  morfo1Otra         String?  @map("morfo1_otra")
+  morfo2Catedra      String   @map("morfo2_catedra")
+  morfo2Otra         String?  @map("morfo2_otra")
+  tipo1Catedra       String   @map("tipo1_catedra")
+  tipo1Otra          String?  @map("tipo1_otra")
+  tipo2Catedra       String   @map("tipo2_catedra")
+  tipo2Otra          String?  @map("tipo2_otra")
+  isRecursante       Boolean  @default(false) @map("is_recursante")
+  recursanteCatedra  String?  @map("recursante_catedra")
+  score              Float    @default(0)
+  commission         String?
+  affinityGroupId    Int?     @map("affinity_group_id")
+  subgroupId         Int?     @map("subgroup_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("students")
+}
+
+model AppState {
+  id                    Int     @id @default(1)
+  registrationOpen      Boolean @default(true) @map("registration_open")
+  linkingEnabled        Boolean @default(false) @map("linking_enabled")
+  commissionsPublished  Boolean @default(false) @map("commissions_published")
+
+  @@map("app_state")
+}
+
+model AffinityGroup {
+  id               Int      @id @default(autoincrement())
+  creatorStudentId Int?     @map("creator_student_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("affinity_groups")
+}
+
+model Subgroup {
+  id               Int      @id @default(autoincrement())
+  affinityGroupId  Int?     @map("affinity_group_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("subgroups")
+}
