@@ -48,10 +48,14 @@ export default function StudentsList({ students }: StudentsListProps) {
     return catedra;
   };
 
-  const getGenderDisplay = (gender: string) => {
+  const getGenderDisplay = (gender: string, genderOther: string | null) => {
+    if (gender === 'otro' && genderOther) {
+      return genderOther;
+    }
     const genderMap: { [key: string]: string } = {
       'masculino': 'M',
       'femenino': 'F',
+      'no_binario': 'NB',
       'otro': 'Otro',
       'prefiero_no_decir': 'N/D'
     };
@@ -138,7 +142,7 @@ export default function StudentsList({ students }: StudentsListProps) {
                   {student.dni}
                 </td>
                 <td className="px-3 py-3 text-gray-600 text-center">
-                  {getGenderDisplay(student.gender)}
+                  {getGenderDisplay(student.gender, student.gender_other)}
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.email}

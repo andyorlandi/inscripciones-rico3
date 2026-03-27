@@ -51,6 +51,7 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
     email: '',
     dni: '',
     gender: '',
+    gender_other: '',
     dg1_catedra: '',
     dg1_otra: '',
     dg2_catedra: '',
@@ -199,9 +200,21 @@ export default function StudentForm({ onSuccess, onBack }: StudentFormProps) {
             <option value="">Seleccioná una opción</option>
             <option value="masculino">Masculino</option>
             <option value="femenino">Femenino</option>
-            <option value="otro">Otro/No binario</option>
+            <option value="no_binario">No binario</option>
+            <option value="otro">Otro</option>
             <option value="prefiero_no_decir">Prefiero no decir</option>
           </select>
+          {formData.gender === 'otro' && (
+            <input
+              type="text"
+              name="gender_other"
+              value={formData.gender_other}
+              onChange={handleChange}
+              required
+              className="input mt-2"
+              placeholder="Especificá tu género"
+            />
+          )}
         </div>
 
         {/* Diseño Gráfico 1 */}

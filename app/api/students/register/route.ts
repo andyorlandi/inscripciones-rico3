@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       email,
       dni,
       gender,
+      gender_other,
       dg1_catedra,
       dg1_otra,
       dg2_catedra,
@@ -42,6 +43,14 @@ export async function POST(request: NextRequest) {
     if (!/^\d{7,8}$/.test(dni)) {
       return NextResponse.json(
         { error: 'El DNI debe tener 7 u 8 dígitos' },
+        { status: 400 }
+      );
+    }
+
+    // Validate gender_other if gender is "otro"
+    if (gender === 'otro' && !gender_other) {
+      return NextResponse.json(
+        { error: 'Debes especificar tu género cuando seleccionás "Otro"' },
         { status: 400 }
       );
     }
@@ -108,6 +117,7 @@ export async function POST(request: NextRequest) {
         email,
         dni,
         gender,
+        genderOther: gender === 'otro' ? gender_other : null,
         personalCode,
         dg1Catedra: dg1_catedra,
         dg1Otra: dg1_otra || null,

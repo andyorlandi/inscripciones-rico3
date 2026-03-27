@@ -6,6 +6,7 @@ export interface StudentForExport {
   email: string;
   dni: string;
   gender: string;
+  gender_other: string | null;
   personal_code: string;
   dg1_catedra: string;
   dg1_otra: string | null;
@@ -32,11 +33,15 @@ function getCatedraValue(catedra: string, otra: string | null): string {
   return catedra;
 }
 
-function getGenderValue(gender: string): string {
+function getGenderValue(gender: string, genderOther: string | null): string {
+  if (gender === 'otro' && genderOther) {
+    return genderOther;
+  }
   const genderMap: { [key: string]: string } = {
     'masculino': 'Masculino',
     'femenino': 'Femenino',
-    'otro': 'Otro/No binario',
+    'no_binario': 'No binario',
+    'otro': 'Otro',
     'prefiero_no_decir': 'Prefiero no decir'
   };
   return genderMap[gender] || gender;
@@ -79,7 +84,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
     allSheet.addRow({
       name: student.name,
       dni: student.dni,
-      gender: getGenderValue(student.gender),
+      gender: getGenderValue(student.gender, student.gender_other),
       email: student.email,
       code: student.personal_code,
       dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),
@@ -122,7 +127,7 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
           sheet.addRow({
             name: student.name,
             dni: student.dni,
-            gender: getGenderValue(student.gender),
+            gender: getGenderValue(student.gender, student.gender_other),
             email: student.email,
             code: student.personal_code,
             dg1: getCatedraValue(student.dg1_catedra, student.dg1_otra),

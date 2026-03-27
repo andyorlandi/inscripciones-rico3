@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       email: s.email,
       dni: s.dni,
       gender: s.gender,
+      gender_other: s.genderOther,
       personal_code: s.personalCode,
       dg1_catedra: s.dg1Catedra,
       dg1_otra: s.dg1Otra,
