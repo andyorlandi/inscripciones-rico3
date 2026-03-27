@@ -9,6 +9,7 @@ interface Commission {
   totalScore: number;
   averageScore: number;
   recursantesCount: number;
+  masculinoCount: number;
   students: any[];
 }
 
@@ -43,6 +44,7 @@ export default function CommissionsPreview({
         const newStudents = c.students.filter(s => s.id !== studentId);
         const newTotalScore = c.totalScore - student.score;
         const newRecursantesCount = c.recursantesCount - (student.is_recursante ? 1 : 0);
+        const newMasculinoCount = c.masculinoCount - (student.gender === 'masculino' ? 1 : 0);
 
         return {
           ...c,
@@ -52,7 +54,8 @@ export default function CommissionsPreview({
           averageScore: newStudents.length > 0
             ? Math.round((newTotalScore / newStudents.length) * 10) / 10
             : 0,
-          recursantesCount: newRecursantesCount
+          recursantesCount: newRecursantesCount,
+          masculinoCount: newMasculinoCount
         };
       }
 
@@ -64,6 +67,7 @@ export default function CommissionsPreview({
         const newStudents = [...c.students, student];
         const newTotalScore = c.totalScore + student.score;
         const newRecursantesCount = c.recursantesCount + (student.is_recursante ? 1 : 0);
+        const newMasculinoCount = c.masculinoCount + (student.gender === 'masculino' ? 1 : 0);
 
         return {
           ...c,
@@ -71,7 +75,8 @@ export default function CommissionsPreview({
           studentCount: newStudents.length,
           totalScore: Math.round(newTotalScore * 10) / 10,
           averageScore: Math.round((newTotalScore / newStudents.length) * 10) / 10,
-          recursantesCount: newRecursantesCount
+          recursantesCount: newRecursantesCount,
+          masculinoCount: newMasculinoCount
         };
       }
 

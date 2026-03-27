@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
         name: true,
         email: true,
         score: true,
-        isRecursante: true
+        isRecursante: true,
+        gender: true
       },
       orderBy: { score: 'desc' }
     });
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
       name: s.name,
       email: s.email,
       score: s.score,
-      is_recursante: s.isRecursante
+      is_recursante: s.isRecursante,
+      gender: s.gender
     })));
 
     // Get stats for response
