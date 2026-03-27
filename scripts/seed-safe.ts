@@ -118,6 +118,21 @@ async function generateStudent(index: number) {
 }
 
 async function seed() {
+  // PROTECCIÓN 1: No permitir en producción
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🚫 ERROR: seed-safe NO puede ejecutarse en producción');
+    process.exit(1);
+  }
+
+  // PROTECCIÓN 2: Requerir confirmación explícita
+  if (process.env.CONFIRM_SEED !== 'yes') {
+    console.error('🚫 ERROR: Debes confirmar explícitamente que quieres borrar datos');
+    console.error('   Este script va a BORRAR TODOS los estudiantes actuales.');
+    console.error('');
+    console.error('   Para ejecutar: CONFIRM_SEED=yes npm run seed');
+    process.exit(1);
+  }
+
   // Clear existing data
   await prisma.student.deleteMany({});
   console.log('🗑️  Cleared existing students');

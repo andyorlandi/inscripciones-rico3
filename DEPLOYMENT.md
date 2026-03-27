@@ -1,3 +1,15 @@
+# ⚠️ IMPORTANTE: Este documento está desactualizado
+
+Este proyecto ahora usa **exclusivamente PostgreSQL en Neon**.
+
+Para deployment actual, ver:
+- `VERCEL_DEPLOYMENT.md` - Guía actualizada
+- `docs/DATABASE.md` - Guía de base de datos
+
+---
+
+# [Contenido original a continuación - Solo referencia histórica]
+
 # Guía de Deployment
 
 ## 🚀 Opción 1: Railway (Recomendada)

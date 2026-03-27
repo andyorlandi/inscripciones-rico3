@@ -20,7 +20,10 @@
       "Bash(vercel:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npx prisma:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm run build:*)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_eId5jOqNGts1@ep-super-shadow-a408f7hp-pooler.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require\" npx tsx:*)",
+      "Bash(npm run backup:*)"
     ]
   }
 }

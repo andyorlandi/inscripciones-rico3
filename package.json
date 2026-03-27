@@ -7,10 +7,16 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "tsx scripts/seed.ts",
+    "seed": "tsx scripts/seed-safe.ts",
+    "seed:danger": "echo '⚠️  DANGER: Este comando borra datos.' && tsx scripts/PELIGROSO-seed-destructivo.ts",
     "init-db": "tsx scripts/init-db.ts",
+    "backup": "tsx scripts/backup-db.ts",
     "postinstall": "prisma generate",
-    "deploy:init": "prisma db push && tsx scripts/init-db.ts"
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status",
+    "migrate:reset": "echo '⚠️  DANGER: Esto BORRA la BD. Presiona Ctrl+C para cancelar.' && sleep 5 && prisma migrate reset",
+    "deploy:init": "prisma migrate deploy && tsx scripts/init-db.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.11.0",

@@ -42,5 +42,9 @@ yarn-error.log*
 *~
 
 # Prisma
-prisma/migrations/*/migration.sql
 .vercel
+
+# Database backups y archivos temporales
+/backups/
+*.backup.json
+/prisma/data/
