@@ -32,9 +32,23 @@ export async function POST(request: NextRequest) {
         id: true,
         name: true,
         email: true,
+        dni: true,
         score: true,
         isRecursante: true,
-        gender: true
+        recursanteCatedra: true,
+        gender: true,
+        morfo1Catedra: true,
+        morfo1Otra: true,
+        morfo2Catedra: true,
+        morfo2Otra: true,
+        tipo1Catedra: true,
+        tipo1Otra: true,
+        tipo2Catedra: true,
+        tipo2Otra: true,
+        dg1Catedra: true,
+        dg1Otra: true,
+        dg2Catedra: true,
+        dg2Otra: true
       },
       orderBy: { score: 'desc' }
     });
@@ -46,7 +60,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Distribute students
+    // Create a map of student details for quick lookup
+    const studentDetailsMap = new Map(students.map(s => [s.id, s]));
+
+    // Distribute students (only with fields needed for algorithm)
     const commissions = distributeStudents(students.map(s => ({
       id: s.id,
       name: s.name,
@@ -56,10 +73,29 @@ export async function POST(request: NextRequest) {
       gender: s.gender
     })));
 
-    // Get stats for response
+    // Get stats for response and enrich students with full data
     const commissionsWithStats = commissions.map(c => ({
       ...getCommissionStats(c),
-      students: c.students
+      students: c.students.map(student => {
+        const details = studentDetailsMap.get(student.id);
+        return {
+          ...student,
+          dni: details?.dni,
+          recursante_catedra: details?.recursanteCatedra,
+          morfo1_catedra: details?.morfo1Catedra,
+          morfo1_otra: details?.morfo1Otra,
+          morfo2_catedra: details?.morfo2Catedra,
+          morfo2_otra: details?.morfo2Otra,
+          tipo1_catedra: details?.tipo1Catedra,
+          tipo1_otra: details?.tipo1Otra,
+          tipo2_catedra: details?.tipo2Catedra,
+          tipo2_otra: details?.tipo2Otra,
+          dg1_catedra: details?.dg1Catedra,
+          dg1_otra: details?.dg1Otra,
+          dg2_catedra: details?.dg2Catedra,
+          dg2_otra: details?.dg2Otra
+        };
+      })
     }));
 
     return NextResponse.json({
