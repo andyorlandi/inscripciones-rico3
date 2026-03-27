@@ -242,7 +242,11 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
 
         {/* Students List */}
         {!showPreview && (
-          <StudentsList students={data.students} />
+          <StudentsList
+            students={data.students}
+            password={password}
+            onRefresh={fetchData}
+          />
         )}
       </div>
     </main>
