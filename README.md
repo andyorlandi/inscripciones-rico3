@@ -260,3 +260,4 @@ Este proyecto es de uso interno para la Cátedra Rico, FADU UBA.
 ## Contacto
 
 Para consultas o reportar problemas, contactar a [tu email/contacto aquí].
+
