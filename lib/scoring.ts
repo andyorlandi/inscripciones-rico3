@@ -55,17 +55,17 @@ export function calculateScore(student: StudentData): number {
   let score = 0;
 
   // Diseño Gráfico 2 - 3 points
-  if (matchesCatedra(student.dg2_catedra, student.dg2_otra, ['Gabriele', 'Ex Wolkowicz', 'Ex Rico'])) {
+  if (matchesCatedra(student.dg2_catedra, student.dg2_otra, ['Gabriele', 'Ex Wolkowicz', 'Ex Rico', 'Salomone'])) {
     score += 3;
   }
 
   // Diseño Gráfico 1 - 2 points
-  if (matchesCatedra(student.dg1_catedra, student.dg1_otra, ['Gabriele', 'Ex Wolkowicz', 'Ex Rico'])) {
+  if (matchesCatedra(student.dg1_catedra, student.dg1_otra, ['Gabriele', 'Ex Wolkowicz', 'Ex Rico', 'Salomone'])) {
     score += 2;
   }
 
   // Tipografía 2 - 1 point
-  if (matchesCatedra(student.tipo2_catedra, student.tipo2_otra, ['Longinotti', 'Cosgaya', 'Gaitto'])) {
+  if (matchesCatedra(student.tipo2_catedra, student.tipo2_otra, ['Longinotti', 'Cosgaya', 'Venancio'])) {
     score += 1;
   }
 
@@ -75,7 +75,7 @@ export function calculateScore(student: StudentData): number {
   }
 
   // Tipografía 1 - 0.5 points
-  if (matchesCatedra(student.tipo1_catedra, student.tipo1_otra, ['Longinotti', 'Cosgaya', 'Gaitto'])) {
+  if (matchesCatedra(student.tipo1_catedra, student.tipo1_otra, ['Longinotti', 'Cosgaya', 'Venancio'])) {
     score += 0.5;
   }
 
