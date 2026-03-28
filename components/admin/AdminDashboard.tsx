@@ -12,6 +12,7 @@ interface AdminDashboardProps {
 interface DashboardData {
   appState: {
     registration_open: number;
+    linking_enabled: number;
   };
   stats: {
     total: number;
@@ -27,6 +28,8 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
   const [error, setError] = useState('');
   const [commissions, setCommissions] = useState<any[] | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showGroups, setShowGroups] = useState(false);
+  const [groups, setGroups] = useState<any[]>([]);
 
   const fetchData = async () => {
     try {
@@ -64,6 +67,26 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
 
       if (!response.ok) {
         throw new Error('Error al cambiar estado');
+      }
+
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleToggleLinking = async () => {
+    try {
+      const response = await fetch('/api/admin/toggle-linking', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${password}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error);
       }
 
       await fetchData();
@@ -117,6 +140,40 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
 
   const handleExport = () => {
     window.open(`/api/admin/export?auth=${encodeURIComponent(password)}`, '_blank');
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const response = await fetch('/api/admin/groups', {
+        headers: { 'Authorization': `Bearer ${password}` }
+      });
+      const data = await response.json();
+      setGroups(data.groups || []);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: number) => {
+    if (!confirm('¿Estás seguro de que querés eliminar este grupo?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/groups/${groupId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${password}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar grupo');
+      }
+
+      await fetchGroups();
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   if (loading) {
@@ -206,6 +263,18 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
             </button>
 
             <button
+              onClick={handleToggleLinking}
+              disabled={data.appState.registration_open === 1}
+              className={`btn ${
+                data.appState.linking_enabled
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              } ${data.appState.registration_open === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {data.appState.linking_enabled ? 'Cerrar vinculación' : 'Habilitar vinculación'}
+            </button>
+
+            <button
               onClick={handleDistribute}
               className="btn-primary"
               disabled={data.stats.total === 0}
@@ -222,12 +291,76 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
             </button>
           </div>
 
-          <p className="mt-4 text-sm text-gray-600">
-            Estado del registro:{' '}
-            <span className={`font-medium ${data.appState.registration_open ? 'text-green-600' : 'text-red-600'}`}>
-              {data.appState.registration_open ? 'Abierto' : 'Cerrado'}
-            </span>
-          </p>
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-600">
+              Estado del registro:{' '}
+              <span className={`font-medium ${data.appState.registration_open ? 'text-green-600' : 'text-red-600'}`}>
+                {data.appState.registration_open ? 'Abierto' : 'Cerrado'}
+              </span>
+            </p>
+
+            {data.appState.registration_open === 1 && (
+              <p className="text-sm text-orange-600">
+                Cerrá el registro antes de habilitar la vinculación
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Groups Management */}
+        <div className="card">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Grupos de afinidad</h2>
+            <button
+              onClick={() => {
+                setShowGroups(!showGroups);
+                if (!showGroups) fetchGroups();
+              }}
+              className="btn-secondary"
+            >
+              {showGroups ? 'Ocultar grupos' : 'Ver grupos'}
+            </button>
+          </div>
+
+          {showGroups && (
+            <div className="space-y-4">
+              {groups.length === 0 ? (
+                <p className="text-gray-600">No hay grupos formados aún</p>
+              ) : (
+                groups.map(group => (
+                  <div key={group.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold">Grupo #{group.id}</h3>
+                        <p className="text-sm text-gray-600">
+                          {group.members.length} integrantes • Score total: {group.totalScore}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteGroup(group.id)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+
+                    <div className="space-y-1">
+                      {group.members.map((m: any) => (
+                        <div key={m.id} className="text-sm flex items-center gap-2">
+                          <span>{m.name} ({m.personalCode}) - Score: {m.score}</span>
+                          {m.subgroupId && (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
+                              Subgrupo {m.subgroupId}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Commissions Preview */}

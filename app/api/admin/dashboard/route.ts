@@ -49,6 +49,9 @@ export async function GET(request: NextRequest) {
       id: s.id,
       name: s.name,
       email: s.email,
+      dni: s.dni,
+      gender: s.gender,
+      gender_other: s.genderOther,
       personal_code: s.personalCode,
       dg1_catedra: s.dg1Catedra,
       dg1_otra: s.dg1Otra,
@@ -66,6 +69,8 @@ export async function GET(request: NextRequest) {
       recursante_catedra: s.recursanteCatedra,
       score: s.score,
       commission: s.commission,
+      affinity_group_id: s.affinityGroupId,
+      subgroup_id: s.subgroupId,
       created_at: s.createdAt
     }));
 

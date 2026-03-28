@@ -223,6 +223,12 @@ export default function StudentsList({ students, password, onRefresh }: Students
               <th className="px-3 py-3 text-left font-medium text-gray-700">
                 Comisión
               </th>
+              <th className="px-3 py-3 text-left font-medium text-gray-700">
+                Grupo
+              </th>
+              <th className="px-3 py-3 text-left font-medium text-gray-700">
+                Subgrupo
+              </th>
               <th className="px-3 py-3 text-center font-medium text-gray-700">
                 Acciones
               </th>
@@ -288,6 +294,12 @@ export default function StudentsList({ students, password, onRefresh }: Students
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.commission || '-'}
+                </td>
+                <td className="px-3 py-3 text-gray-600">
+                  {student.affinity_group_id || '-'}
+                </td>
+                <td className="px-3 py-3 text-gray-600">
+                  {student.subgroup_id || '-'}
                 </td>
                 <td className="px-3 py-3 text-center">
                   <button

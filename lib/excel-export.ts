@@ -24,6 +24,8 @@ export interface StudentForExport {
   recursante_catedra: string | null;
   score: number;
   commission: string | null;
+  affinity_group_id: number | null;
+  subgroup_id: number | null;
 }
 
 function getCatedraValue(catedra: string, otra: string | null): string {
@@ -69,6 +71,8 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
     { header: 'Cátedra anterior DG3', key: 'recursante_catedra', width: 25 },
     { header: 'Score', key: 'score', width: 10 },
     { header: 'Comisión asignada', key: 'commission', width: 30 },
+    { header: 'Grupo de afinidad', key: 'group', width: 18 },
+    { header: 'Subgrupo', key: 'subgroup', width: 12 },
   ];
 
   // Style header row
@@ -97,6 +101,8 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
       recursante_catedra: student.recursante_catedra || '',
       score: student.score,
       commission: student.commission || '',
+      group: student.affinity_group_id || '',
+      subgroup: student.subgroup_id || '',
     });
   });
 
@@ -140,6 +146,8 @@ export async function generateExcel(students: StudentForExport[]): Promise<Buffe
             recursante_catedra: student.recursante_catedra || '',
             score: student.score,
             commission: student.commission || '',
+            group: student.affinity_group_id || '',
+            subgroup: student.subgroup_id || '',
           });
         });
       }

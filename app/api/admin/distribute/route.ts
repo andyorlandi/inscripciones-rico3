@@ -37,6 +37,8 @@ export async function POST(request: NextRequest) {
         isRecursante: true,
         recursanteCatedra: true,
         gender: true,
+        subgroupId: true,
+        affinityGroupId: true,
         morfo1Catedra: true,
         morfo1Otra: true,
         morfo2Catedra: true,
@@ -70,7 +72,9 @@ export async function POST(request: NextRequest) {
       email: s.email,
       score: s.score,
       is_recursante: s.isRecursante,
-      gender: s.gender
+      gender: s.gender,
+      subgroup_id: s.subgroupId,
+      affinity_group_id: s.affinityGroupId
     })));
 
     // Get stats for response and enrich students with full data

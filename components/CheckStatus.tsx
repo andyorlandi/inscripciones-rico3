@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
+import GroupFormation from './GroupFormation';
 
 interface CheckStatusProps {
   onBack: () => void;
@@ -8,51 +9,85 @@ interface CheckStatusProps {
 
 export default function CheckStatus({ onBack }: CheckStatusProps) {
   const [email, setEmail] = useState('');
+  const [student, setStudent] = useState<any>(null);
+  const [groupStatus, setGroupStatus] = useState<any>(null);
+  const [appState, setAppState] = useState<any>(null);
+  const [showGroupFormation, setShowGroupFormation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [studentData, setStudentData] = useState<{
-    name: string;
-    personal_code: string;
-  } | null>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const fetchData = async (studentEmail: string) => {
     setLoading(true);
     setError('');
-    setStudentData(null);
 
     try {
-      const response = await fetch(`/api/students/check-status?email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al verificar el estado');
+      // 1. Check student status
+      const studentRes = await fetch(`/api/students/check-status?email=${encodeURIComponent(studentEmail)}`);
+      if (!studentRes.ok) {
+        const data = await studentRes.json();
+        throw new Error(data.error || 'No se encontró un estudiante con ese mail');
       }
+      const studentData = await studentRes.json();
+      setStudent(studentData);
 
-      setStudentData(data);
+      // 2. Get app state
+      const appStateRes = await fetch('/api/app-state');
+      const appStateData = await appStateRes.json();
+      setAppState(appStateData);
+
+      // 3. Get group status
+      const groupRes = await fetch(`/api/groups/status?email=${encodeURIComponent(studentEmail)}`);
+      const groupData = await groupRes.json();
+      setGroupStatus(groupData);
+
     } catch (err: any) {
       setError(err.message);
+      setStudent(null);
+      setAppState(null);
+      setGroupStatus(null);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="card">
-      <div className="mb-6">
-        <button
-          onClick={onBack}
-          className="text-primary-600 hover:text-primary-700 font-medium"
-        >
-          ← Volver
-        </button>
-      </div>
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    await fetchData(email);
+  };
 
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        Verificar estado de inscripción
-      </h2>
+  const handleGroupFormationSuccess = () => {
+    setShowGroupFormation(false);
+    fetchData(email);
+  };
 
-      {!studentData ? (
+  // Si está armando grupo
+  if (showGroupFormation && student) {
+    return (
+      <GroupFormation
+        creatorEmail={email}
+        onSuccess={handleGroupFormationSuccess}
+        onCancel={() => setShowGroupFormation(false)}
+      />
+    );
+  }
+
+  // Formulario de email
+  if (!student) {
+    return (
+      <div className="card">
+        <div className="mb-6">
+          <button
+            onClick={onBack}
+            className="text-primary-600 hover:text-primary-700 font-medium"
+          >
+            ← Volver
+          </button>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Verificar estado de inscripción
+        </h2>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="label">
@@ -83,35 +118,81 @@ export default function CheckStatus({ onBack }: CheckStatusProps) {
             {loading ? 'Verificando...' : 'Verificar'}
           </button>
         </form>
-      ) : (
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4">
-            <p className="text-green-800 font-medium">
-              Ya estás inscripto/a, {studentData.name.split(' ')[0]}!
-            </p>
+      </div>
+    );
+  }
 
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Tu código personal es:
-              </p>
-              <p className="text-2xl font-bold text-primary-700">
-                {studentData.personal_code}
-              </p>
-            </div>
+  // Vista con datos del estudiante
+  return (
+    <div className="card max-w-2xl mx-auto">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          ✓ Ya estás inscripto/a, {student.name.split(' ')[0]}!
+        </h2>
+      </div>
 
-            <p className="text-sm text-gray-600">
-              Las comisiones todavía no fueron publicadas. Te vamos a notificar cuando estén listas.
-            </p>
-          </div>
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <p className="text-sm text-gray-600 mb-2">Tu código personal es:</p>
+        <p className="text-3xl font-bold font-mono text-center text-primary-700 mb-3">
+          {student.personal_code}
+        </p>
+        <button
+          onClick={() => navigator.clipboard.writeText(student.personal_code)}
+          className="btn-secondary w-full"
+        >
+          Copiar código
+        </button>
+      </div>
 
+      {/* Sección de vinculación */}
+      {appState?.linking_enabled && !groupStatus?.inGroup && (
+        <div className="mb-6">
+          <p className="text-gray-700 mb-4">
+            Si querés anotarte con compañeros/as, tocá el botón de abajo.
+            Si preferís ir solo/a, no hace falta que hagas nada.
+          </p>
           <button
-            onClick={onBack}
-            className="btn-secondary w-full"
+            onClick={() => setShowGroupFormation(true)}
+            className="btn-primary w-full"
           >
-            Volver al inicio
+            Armar grupo
           </button>
         </div>
       )}
+
+      {/* Mostrar grupo si existe */}
+      {groupStatus?.inGroup && (
+        <div className="mb-6">
+          <h3 className="font-bold text-lg mb-3">Tu grupo de afinidad:</h3>
+          <div className="space-y-2">
+            {groupStatus.group.members.map((member: any) => (
+              <div key={member.id} className="bg-gray-50 rounded p-3">
+                <p className="font-medium">{member.name}</p>
+                <p className="text-sm text-gray-600">{member.personalCode}</p>
+              </div>
+            ))}
+          </div>
+
+          {groupStatus.needsSubdivision && groupStatus.isCreator && (
+            <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded">
+              <p className="text-sm text-orange-800 mb-3">
+                Tu grupo tiene más de 3 personas. Necesitás subdividirlo en subgrupos de hasta 3.
+              </p>
+              <button className="btn-primary">
+                Subdividir grupo
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <p className="text-sm text-gray-600 text-center mb-6">
+        Las comisiones todavía no fueron publicadas. Te vamos a notificar cuando estén listas.
+      </p>
+
+      <button onClick={onBack} className="btn-secondary w-full">
+        ← Volver al inicio
+      </button>
     </div>
   );
 }

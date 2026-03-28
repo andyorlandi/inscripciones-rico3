@@ -62,7 +62,9 @@ export async function GET(request: NextRequest) {
       is_recursante: s.isRecursante ? 1 : 0,
       recursante_catedra: s.recursanteCatedra,
       score: s.score,
-      commission: s.commission
+      commission: s.commission,
+      affinity_group_id: s.affinityGroupId,
+      subgroup_id: s.subgroupId
     }));
 
     // Generate Excel file
