@@ -186,9 +186,52 @@ export default function CheckStatus({ onBack }: CheckStatusProps) {
         </div>
       )}
 
-      <p className="text-sm text-gray-600 text-center mb-6">
-        Las comisiones todavía no fueron publicadas. Te vamos a notificar cuando estén listas.
-      </p>
+      {/* Commission Status */}
+      {!student.commissions_published ? (
+        <p className="text-sm text-gray-600 text-center mb-6">
+          Las comisiones todavía no fueron publicadas. Te vamos a notificar cuando estén listas.
+        </p>
+      ) : student.commission ? (
+        <div className="mb-6">
+          {/* Commission Announcement */}
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg p-6 text-white text-center mb-6">
+            <p className="text-lg mb-2">¡Ya tenés comisión!</p>
+            <h3 className="text-3xl font-bold mb-1">
+              {student.commission_name}
+            </h3>
+          </div>
+
+          {/* Classmates List */}
+          <div>
+            <h3 className="font-bold text-lg mb-3">Tus compañeros de comisión:</h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {student.commission_classmates?.map((classmate: any, index: number) => (
+                <div
+                  key={index}
+                  className={`rounded p-3 ${
+                    classmate.same_subgroup
+                      ? 'bg-blue-50 border border-blue-200'
+                      : 'bg-gray-50'
+                  }`}
+                >
+                  <p className="font-medium">{classmate.name}</p>
+                  {classmate.same_subgroup && (
+                    <p className="text-xs text-blue-700 mt-1">
+                      ✓ Tu compañero de subgrupo
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p className="text-red-800 text-center">
+            Hubo un problema con tu asignación. Acercate a los docentes para resolverlo.
+          </p>
+        </div>
+      )}
 
       <button onClick={onBack} className="btn-secondary w-full">
         ← Volver al inicio

@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
     const recursantes = await prisma.student.count({
       where: { isRecursante: true }
     });
+    const studentsWithCommission = await prisma.student.count({
+      where: { commission: { not: null } }
+    });
 
     // Get all students
     const students = await prisma.student.findMany({
@@ -83,7 +86,8 @@ export async function GET(request: NextRequest) {
       stats: {
         total,
         avgScore: Math.round((aggregates._avg.score || 0) * 10) / 10,
-        recursantes
+        recursantes,
+        studentsWithCommission
       },
       students: studentsFormatted
     });

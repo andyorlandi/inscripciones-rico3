@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { COMMISSIONS } from '@/lib/distribution';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,12 +14,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get app state
+    const appState = await prisma.appState.findUnique({
+      where: { id: 1 },
+      select: { commissionsPublished: true }
+    });
+
     const student = await prisma.student.findUnique({
       where: { email },
       select: {
         name: true,
         personalCode: true,
-        commission: true
+        commission: true,
+        subgroupId: true
       }
     });
 
@@ -29,11 +37,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const response: any = {
       name: student.name,
       personal_code: student.personalCode,
-      commission: student.commission
-    });
+      commissions_published: appState?.commissionsPublished || false
+    };
+
+    // If commissions are published, include commission info
+    if (appState?.commissionsPublished && student.commission) {
+      // Get commission name
+      const commissionData = COMMISSIONS.find(c => c.id === student.commission);
+      response.commission = student.commission;
+      response.commission_name = commissionData?.name || student.commission;
+
+      // Get classmates in the same commission
+      const classmates = await prisma.student.findMany({
+        where: {
+          commission: student.commission,
+          email: { not: email } // Exclude the student themselves
+        },
+        select: {
+          name: true,
+          subgroupId: true
+        },
+        orderBy: { name: 'asc' }
+      });
+
+      response.commission_classmates = classmates.map(c => ({
+        name: c.name,
+        same_subgroup: student.subgroupId !== null && c.subgroupId === student.subgroupId
+      }));
+    }
+
+    return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('Check status error:', error);

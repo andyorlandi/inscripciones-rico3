@@ -13,11 +13,13 @@ interface DashboardData {
   appState: {
     registration_open: number;
     linking_enabled: number;
+    commissions_published: number;
   };
   stats: {
     total: number;
     avgScore: number;
     recursantes: number;
+    studentsWithCommission: number;
   };
   students: any[];
 }
@@ -176,6 +178,31 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
     }
   };
 
+  const handleToggleCommissions = async () => {
+    // If publishing, show confirmation dialog
+    if (!data?.appState.commissions_published) {
+      if (!confirm('¿Estás seguro/a? Los alumnos van a poder ver en qué comisión quedaron.')) {
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch('/api/admin/toggle-commissions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${password}` }
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error);
+      }
+
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen py-8 px-4">
@@ -244,6 +271,80 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
           </div>
         </div>
 
+        {/* Process Stepper */}
+        <div className="card">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Estado del proceso</h2>
+
+          <div className="flex items-center justify-between">
+            {/* Step 1: Registration */}
+            <div className="flex-1">
+              <div className="flex flex-col items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                  !data.appState.registration_open ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+                }`}>
+                  {!data.appState.registration_open ? '✓' : '1'}
+                </div>
+                <p className="mt-2 text-sm font-medium text-gray-900">Registro</p>
+                <p className="text-xs text-gray-600">
+                  {data.appState.registration_open ? 'Abierto' : 'Cerrado'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 h-1 bg-gray-300 mx-2"></div>
+
+            {/* Step 2: Linking */}
+            <div className="flex-1">
+              <div className="flex flex-col items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                  data.appState.linking_enabled ? 'bg-blue-500 text-white' :
+                  !data.appState.registration_open ? 'bg-gray-300 text-gray-600' : 'bg-gray-200 text-gray-400'
+                }`}>
+                  {data.appState.linking_enabled ? '2' : '-'}
+                </div>
+                <p className="mt-2 text-sm font-medium text-gray-900">Vinculación</p>
+                <p className="text-xs text-gray-600">
+                  {data.appState.linking_enabled ? 'Habilitada' : 'No habilitada'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 h-1 bg-gray-300 mx-2"></div>
+
+            {/* Step 3: Distribution */}
+            <div className="flex-1">
+              <div className="flex flex-col items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                  (data.stats.studentsWithCommission || 0) > 0 ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {(data.stats.studentsWithCommission || 0) > 0 ? '✓' : '3'}
+                </div>
+                <p className="mt-2 text-sm font-medium text-gray-900">Distribución</p>
+                <p className="text-xs text-gray-600">
+                  {(data.stats.studentsWithCommission || 0) > 0 ? 'Completada' : 'Pendiente'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 h-1 bg-gray-300 mx-2"></div>
+
+            {/* Step 4: Publication */}
+            <div className="flex-1">
+              <div className="flex flex-col items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                  data.appState.commissions_published ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {data.appState.commissions_published ? '✓' : '4'}
+                </div>
+                <p className="mt-2 text-sm font-medium text-gray-900">Publicación</p>
+                <p className="text-xs text-gray-600">
+                  {data.appState.commissions_published ? 'Publicadas' : 'No publicadas'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="card">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -280,6 +381,18 @@ export default function AdminDashboard({ password, onLogout }: AdminDashboardPro
               disabled={data.stats.total === 0}
             >
               Distribuir en comisiones
+            </button>
+
+            <button
+              onClick={handleToggleCommissions}
+              disabled={(data.stats.studentsWithCommission || 0) === 0}
+              className={`btn ${
+                data.appState.commissions_published
+                  ? 'bg-orange-600 text-white hover:bg-orange-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              } ${(data.stats.studentsWithCommission || 0) === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {data.appState.commissions_published ? 'Despublicar comisiones' : 'Publicar comisiones'}
             </button>
 
             <button
