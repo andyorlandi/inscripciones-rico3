@@ -144,6 +144,16 @@ export default function CheckStatus({ onBack }: CheckStatusProps) {
         </button>
       </div>
 
+      {/* DEBUG INFO - Remove after testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+          <p>Debug Info:</p>
+          <p>linking_enabled: {appState?.linking_enabled ? 'true' : 'false'}</p>
+          <p>inGroup: {groupStatus?.inGroup ? 'true' : 'false'}</p>
+          <p>Show button: {(appState?.linking_enabled && !groupStatus?.inGroup) ? 'YES' : 'NO'}</p>
+        </div>
+      )}
+
       {/* Sección de vinculación */}
       {appState?.linking_enabled && !groupStatus?.inGroup && (
         <div className="mb-6">
