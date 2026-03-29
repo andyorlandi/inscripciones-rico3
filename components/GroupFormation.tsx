@@ -24,6 +24,8 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
   const [isValidating, setIsValidating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [creatorMember, setCreatorMember] = useState<Member | null>(null);
+  const [draggedMember, setDraggedMember] = useState<{ member: Member; fromSubgroup: number } | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
 
   // Auto-organize members into subgroups (max 3 per subgroup)
   const organizeIntoSubgroups = (allMembers: Member[]) => {
@@ -95,10 +97,31 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
         const updatedMembers = [...members, newMember];
         setMembers(updatedMembers);
 
-        // Auto-organize into subgroups
-        const newSubgroups = organizeIntoSubgroups(updatedMembers);
-        setSubgroups(newSubgroups);
+        // Add to first available subgroup (with space) or create new one
+        const newSubgroups = [...subgroups];
+        let added = false;
 
+        // Try to add to existing subgroup with space
+        for (let i = 0; i < newSubgroups.length; i++) {
+          if (newSubgroups[i].length < 3) {
+            newSubgroups[i] = [...newSubgroups[i], newMember];
+            added = true;
+            break;
+          }
+        }
+
+        // If no space, create new subgroup if allowed
+        if (!added) {
+          if (newSubgroups.length < 2) {
+            newSubgroups.push([newMember]);
+          } else {
+            // Should not happen as we limit to 6 total members
+            setErrors(['No hay espacio en los subgrupos existentes']);
+            return;
+          }
+        }
+
+        setSubgroups(newSubgroups);
         setCurrentCode('');
       } else {
         setErrors(data.errors || ['Código inválido']);
@@ -111,10 +134,20 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
   };
 
   const removeMember = (memberId: number) => {
-    const updatedMembers = members.filter(m => m.id !== memberId && !m.isCreator);
+    // Remove from members list
+    const updatedMembers = members.filter(m => m.id !== memberId);
     setMembers(updatedMembers);
-    const newSubgroups = organizeIntoSubgroups(updatedMembers);
-    setSubgroups(newSubgroups);
+
+    // Remove from subgroups
+    const newSubgroups = subgroups.map(sg => sg.filter(m => m.id !== memberId));
+
+    // Clean up empty subgroups (keep at least one)
+    const cleaned = newSubgroups.filter(sg => sg.length > 0);
+    if (cleaned.length === 0) {
+      cleaned.push([]);
+    }
+
+    setSubgroups(cleaned);
   };
 
   const moveMember = (memberId: number, toSubgroupIndex: number) => {
@@ -158,6 +191,80 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
     );
 
     setSubgroups(cleaned);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, member: Member, subgroupIndex: number) => {
+    if (member.isCreator) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedMember({ member, fromSubgroup: subgroupIndex });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.4';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedMember(null);
+    setDropTarget(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, subgroupIndex: number) => {
+    if (!draggedMember) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget(subgroupIndex);
+  };
+
+  const handleDragLeave = () => {
+    setDropTarget(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetSubgroupIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedMember) return;
+
+    const { member, fromSubgroup } = draggedMember;
+
+    // Don't move if already in target subgroup
+    if (fromSubgroup === targetSubgroupIndex) {
+      setDraggedMember(null);
+      setDropTarget(null);
+      return;
+    }
+
+    // Check if target subgroup would exceed 3
+    if (subgroups[targetSubgroupIndex].length >= 3) {
+      setErrors(['Un subgrupo no puede tener más de 3 personas']);
+      setTimeout(() => setErrors([]), 3000);
+      setDraggedMember(null);
+      setDropTarget(null);
+      return;
+    }
+
+    // Perform the move
+    moveMember(member.id, targetSubgroupIndex);
+
+    setDraggedMember(null);
+    setDropTarget(null);
+  };
+
+  // Add new subgroup
+  const addNewSubgroup = () => {
+    if (subgroups.length >= 2) {
+      setErrors(['Solo podés tener hasta 2 subgrupos']);
+      setTimeout(() => setErrors([]), 3000);
+      return;
+    }
+    setSubgroups([...subgroups, []]);
   };
 
   const handleConfirm = async () => {
@@ -214,8 +321,8 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
     <div className="card max-w-4xl mx-auto">
       <h2 className="text-xl font-bold mb-2">Armar grupo de afinidad</h2>
       <p className="text-sm text-gray-600 mb-6">
-        Agregá a tus compañeros de a uno. Se irán organizando automáticamente en subgrupos de hasta 3 personas.
-        Podés reorganizarlos antes de confirmar.
+        Agregá a tus compañeros ingresando sus códigos personales (máximo 5). Podés organizarlos en subgrupos
+        de hasta 3 personas arrastrando los códigos entre subgrupos.
       </p>
 
       {/* Add member input */}
@@ -259,15 +366,36 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
       {/* Subgroups visualization */}
       {members.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-bold mb-3">
-            Organización en subgrupos {subgroups.length > 1 && `(${subgroups.length} subgrupos)`}
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold">
+              Organización en subgrupos {subgroups.length > 1 && `(${subgroups.length} subgrupos)`}
+            </h3>
+            {subgroups.length < 2 && totalMembers > 3 && (
+              <button
+                onClick={addNewSubgroup}
+                className="text-sm px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+              >
+                + Agregar subgrupo
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-600 mb-3">
+            💡 Arrastrá los códigos entre subgrupos para reorganizar
+          </p>
 
           <div className="space-y-4">
             {subgroups.map((subgroup, sgIndex) => (
               <div
                 key={sgIndex}
-                className="border-2 border-primary-200 rounded-lg p-4 bg-primary-50"
+                onDragOver={(e) => handleDragOver(e, sgIndex)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, sgIndex)}
+                className={`border-2 rounded-lg p-4 transition-all ${
+                  dropTarget === sgIndex && draggedMember?.fromSubgroup !== sgIndex
+                    ? 'border-green-400 bg-green-50 border-dashed scale-[1.02]'
+                    : 'border-primary-200 bg-primary-50'
+                }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-primary-900">
@@ -279,15 +407,31 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
                 </div>
 
                 {subgroup.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">Vacío</p>
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-white">
+                    <p className="text-sm text-gray-500">
+                      {dropTarget === sgIndex ? '⬇ Soltá aquí' : 'Arrastrá códigos aquí'}
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {subgroup.map((member) => (
                       <div
                         key={member.id}
-                        className="bg-white rounded-lg p-3 flex items-center justify-between"
+                        draggable={!member.isCreator}
+                        onDragStart={(e) => handleDragStart(e, member, sgIndex)}
+                        onDragEnd={handleDragEnd}
+                        className={`bg-white rounded-lg p-3 flex items-center justify-between transition-all ${
+                          !member.isCreator ? 'cursor-move hover:shadow-md hover:scale-[1.02]' : ''
+                        }`}
                       >
                         <div className="flex items-center gap-2">
+                          {!member.isCreator && (
+                            <div className="text-gray-400">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                              </svg>
+                            </div>
+                          )}
                           <div>
                             <p className="font-medium">
                               {member.name}
@@ -305,25 +449,11 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
 
                         {!member.isCreator && (
                           <div className="flex gap-2">
-                            {/* Move buttons */}
-                            {subgroups.length > 1 && subgroups.map((_, targetIndex) => {
-                              if (targetIndex === sgIndex) return null;
-                              return (
-                                <button
-                                  key={targetIndex}
-                                  onClick={() => moveMember(member.id, targetIndex)}
-                                  className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                                  title={`Mover a Subgrupo ${targetIndex + 1}`}
-                                >
-                                  → {targetIndex + 1}
-                                </button>
-                              );
-                            })}
-
                             {/* Remove button */}
                             <button
                               onClick={() => removeMember(member.id)}
                               className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                              title="Eliminar"
                             >
                               ✕
                             </button>
