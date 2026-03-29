@@ -23,37 +23,8 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
   const [errors, setErrors] = useState<string[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [creatorMember, setCreatorMember] = useState<Member | null>(null);
   const [draggedMember, setDraggedMember] = useState<{ member: Member; fromSubgroup: number } | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
-
-  // Auto-organize members into subgroups (max 3 per subgroup)
-  const organizeIntoSubgroups = (allMembers: Member[]) => {
-    const organized: Member[][] = [];
-    let currentSubgroup: Member[] = [];
-
-    allMembers.forEach((member, index) => {
-      currentSubgroup.push(member);
-
-      // If subgroup reaches 3, start a new one
-      if (currentSubgroup.length === 3) {
-        organized.push(currentSubgroup);
-        currentSubgroup = [];
-      }
-    });
-
-    // Add remaining members
-    if (currentSubgroup.length > 0) {
-      organized.push(currentSubgroup);
-    }
-
-    // Ensure at least one empty subgroup if we have room
-    if (allMembers.length < 6 && organized.length === 0) {
-      organized.push([]);
-    }
-
-    return organized;
-  };
 
   // Initialize with creator
   useEffect(() => {
@@ -63,7 +34,6 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
       name: creatorName || 'Vos (creador)',
       isCreator: true
     };
-    setCreatorMember(creator);
     setMembers([creator]);
     setSubgroups([[creator]]);
   }, [creatorName]);
@@ -94,9 +64,6 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
           name: data.members[0].name
         };
 
-        const updatedMembers = [...members, newMember];
-        setMembers(updatedMembers);
-
         // Add to first available subgroup (with space) or create new one
         const newSubgroups = [...subgroups];
         let added = false;
@@ -114,15 +81,20 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
         if (!added) {
           if (newSubgroups.length < 2) {
             newSubgroups.push([newMember]);
-          } else {
-            // Should not happen as we limit to 6 total members
-            setErrors(['No hay espacio en los subgrupos existentes']);
-            return;
+            added = true;
           }
         }
 
-        setSubgroups(newSubgroups);
-        setCurrentCode('');
+        // Only update state if we successfully added to a subgroup
+        if (added) {
+          const updatedMembers = [...members, newMember];
+          setMembers(updatedMembers);
+          setSubgroups(newSubgroups);
+          setCurrentCode('');
+        } else {
+          // This should not happen as we limit to 6 total members
+          setErrors(['No hay espacio en los subgrupos existentes']);
+        }
       } else {
         setErrors(data.errors || ['Código inválido']);
       }
@@ -222,8 +194,14 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
     setDropTarget(subgroupIndex);
   };
 
-  const handleDragLeave = () => {
-    setDropTarget(null);
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear drop target if we're leaving to a non-child element
+    const currentTarget = e.currentTarget;
+    const relatedTarget = e.relatedTarget as Node;
+
+    if (!currentTarget.contains(relatedTarget)) {
+      setDropTarget(null);
+    }
   };
 
   const handleDrop = (e: React.DragEvent, targetSubgroupIndex: number) => {
@@ -467,11 +445,10 @@ export default function GroupFormation({ creatorEmail, creatorName, onSuccess, o
             ))}
           </div>
 
-          {totalMembers > 3 && (
+          {totalMembers > 1 && (
             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
               <p className="text-sm text-blue-800">
                 💡 <strong>Tip:</strong> Los subgrupos se mantendrán juntos al distribuir en comisiones.
-                {totalMembers <= 3 && ' Como son 3 o menos, formarán un solo subgrupo automáticamente.'}
               </p>
             </div>
           )}
