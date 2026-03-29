@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { creatorEmail, memberCodes } = await request.json();
+    const { creatorEmail, memberCodes, subgroupDivisions } = await request.json();
 
     // Verificar linking habilitado
     const appState = await prisma.appState.findUnique({ where: { id: 1 } });
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       // 1. Obtener creador
       const creator = await tx.student.findUnique({
         where: { email: creatorEmail },
-        select: { id: true, personalCode: true, affinityGroupId: true }
+        select: { id: true, name: true, personalCode: true, affinityGroupId: true }
       });
 
       if (!creator) {
@@ -59,19 +59,61 @@ export async function POST(request: NextRequest) {
         data: { affinityGroupId: group.id }
       });
 
-      // 6. Si <= 3, crear subgrupo automáticamente
-      let needsSubdivision = members.length > 3;
-      if (!needsSubdivision) {
-        const subgroup = await tx.subgroup.create({
-          data: { affinityGroupId: group.id }
-        });
-        await tx.student.updateMany({
-          where: { id: { in: memberIds } },
-          data: { subgroupId: subgroup.id }
-        });
+      // 6. Crear subgrupos
+      if (subgroupDivisions && Array.isArray(subgroupDivisions)) {
+        // Custom divisions provided from frontend
+        // subgroupDivisions = [[0, 1, 2], [3, 4]] (indices in members array)
+
+        // Create ordered list matching the codes order
+        const orderedMembers = allCodes.map(code =>
+          members.find(m => m.personalCode === code)!
+        );
+
+        // Validate divisions
+        const allIndices = subgroupDivisions.flat();
+        const uniqueIndices = new Set(allIndices);
+
+        if (allIndices.length !== orderedMembers.length) {
+          throw new Error('Todos los miembros deben estar asignados a un subgrupo');
+        }
+
+        if (uniqueIndices.size !== allIndices.length) {
+          throw new Error('No puede haber miembros duplicados en subgrupos');
+        }
+
+        if (subgroupDivisions.some((div: number[]) => div.length > 3 || div.length < 1)) {
+          throw new Error('Cada subgrupo debe tener entre 1 y 3 personas');
+        }
+
+        // Create subgroups and assign members
+        for (const division of subgroupDivisions) {
+          const subgroup = await tx.subgroup.create({
+            data: { affinityGroupId: group.id }
+          });
+
+          const studentIds = division.map((index: number) => orderedMembers[index].id);
+
+          await tx.student.updateMany({
+            where: { id: { in: studentIds } },
+            data: { subgroupId: subgroup.id }
+          });
+        }
+      } else {
+        // Auto-create subgroups (legacy behavior)
+        if (members.length <= 3) {
+          // Single subgroup
+          const subgroup = await tx.subgroup.create({
+            data: { affinityGroupId: group.id }
+          });
+          await tx.student.updateMany({
+            where: { id: { in: memberIds } },
+            data: { subgroupId: subgroup.id }
+          });
+        }
+        // If > 3 and no divisions provided, subgroups will be created later via subdivide endpoint
       }
 
-      return { groupId: group.id, needsSubdivision, members };
+      return { groupId: group.id, members };
     }, {
       isolationLevel: 'Serializable'
     });
@@ -81,8 +123,7 @@ export async function POST(request: NextRequest) {
       group: {
         id: result.groupId,
         members: result.members
-      },
-      needsSubdivision: result.needsSubdivision
+      }
     });
 
   } catch (error: any) {

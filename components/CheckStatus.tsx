@@ -65,6 +65,7 @@ export default function CheckStatus({ onBack }: CheckStatusProps) {
     return (
       <GroupFormation
         creatorEmail={email}
+        creatorName={student.name}
         onSuccess={handleGroupFormationSuccess}
         onCancel={() => setShowGroupFormation(false)}
       />
