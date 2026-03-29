@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 function checkAuth(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const password = process.env.ADMIN_PASSWORD;

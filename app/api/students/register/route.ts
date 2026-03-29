@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { calculateScore } from '@/lib/scoring';
 import { generatePersonalCode } from '@/lib/personal-code';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

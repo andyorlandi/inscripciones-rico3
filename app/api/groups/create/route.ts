@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { creatorEmail, memberCodes, subgroupDivisions } = await request.json();
@@ -65,9 +67,13 @@ export async function POST(request: NextRequest) {
         // subgroupDivisions = [[0, 1, 2], [3, 4]] (indices in members array)
 
         // Create ordered list matching the codes order
-        const orderedMembers = allCodes.map(code =>
-          members.find(m => m.personalCode === code)!
-        );
+        const orderedMembers = allCodes.map(code => {
+          const member = members.find(m => m.personalCode === code);
+          if (!member) {
+            throw new Error(`Miembro con código ${code} no encontrado`);
+          }
+          return member;
+        });
 
         // Validate divisions
         const allIndices = subgroupDivisions.flat();
