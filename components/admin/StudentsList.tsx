@@ -20,7 +20,8 @@ export default function StudentsList({ students, password, onRefresh }: Students
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(search.toLowerCase()) ||
-    student.email.toLowerCase().includes(search.toLowerCase())
+    student.email.toLowerCase().includes(search.toLowerCase()) ||
+    (student.personal_code && student.personal_code.toLowerCase().includes(search.toLowerCase()))
   );
 
   const sortedStudents = [...filteredStudents].sort((a, b) => {
@@ -158,7 +159,7 @@ export default function StudentsList({ students, password, onRefresh }: Students
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por nombre o mail..."
+          placeholder="Buscar por nombre, código o mail..."
           className="input max-w-md"
         />
       </div>
@@ -180,6 +181,9 @@ export default function StudentsList({ students, password, onRefresh }: Students
                 onClick={() => handleSort('name')}
               >
                 Nombre {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="px-3 py-3 text-left font-medium text-gray-700">
+                Código
               </th>
               <th className="px-3 py-3 text-left font-medium text-gray-700">
                 DNI
@@ -247,6 +251,9 @@ export default function StudentsList({ students, password, onRefresh }: Students
                 </td>
                 <td className="px-3 py-3 font-medium text-gray-900">
                   {student.name}
+                </td>
+                <td className="px-3 py-3 text-gray-600 font-mono text-xs">
+                  {student.personal_code || '-'}
                 </td>
                 <td className="px-3 py-3 text-gray-600">
                   {student.dni}
