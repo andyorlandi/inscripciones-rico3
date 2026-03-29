@@ -1,4 +1,20 @@
-// Distribution algorithm for assigning students to commissions
+/**
+ * Distribution algorithm for assigning students to commissions
+ *
+ * PRIORITY ORDER:
+ * 1. Keep affinity groups TOGETHER (all subgroups in same commission)
+ * 2. ONLY split if keeping together would violate ±2 balance constraints
+ * 3. When split is necessary, use subgroups as atomic units (never break subgroups)
+ *
+ * HARD CONSTRAINTS (never violated):
+ * - Student count difference between commissions: ±2 max
+ * - Masculine count difference between commissions: ±2 max
+ * - Subgroups are NEVER separated
+ *
+ * OPTIMIZATION GOALS:
+ * - Balance total score across commissions
+ * - Distribute recursantes evenly (tracked but not enforced)
+ */
 
 export interface Student {
   id: number;
@@ -172,30 +188,52 @@ function distributeUnits(units: AssignmentUnit[]): Commission[] {
     }
   }
 
-  // Assign affinity groups (best effort to keep together)
+  // PRIORITY: Keep affinity groups together unless it causes imbalance
   for (const [affinityId, affinityUnits] of unitsByAffinity) {
     const totalStudents = affinityUnits.reduce((sum, u) => sum + u.students.length, 0);
     const totalScore = affinityUnits.reduce((sum, u) => sum + u.totalScore, 0);
+    const totalMasculino = affinityUnits.reduce((sum, u) => sum + u.masculinoCount, 0);
 
-    // Try to assign all to the same commission
-    const maxStudents = Math.max(...commissions.map(c => c.students.length));
-    const validCommissions = commissions.filter(c => {
-      const newCount = c.students.length + totalStudents;
-      const avgPerCommission = Math.ceil(units.length / 3);
-      return newCount <= avgPerCommission + 2 && maxStudents - newCount <= 2;
-    });
+    // Try to assign the ENTIRE affinity group to the same commission
+    let groupAssigned = false;
 
-    if (validCommissions.length > 0) {
-      // Assign to commission with lowest score
-      validCommissions.sort((a, b) => a.totalScore - b.totalScore);
-      const targetCommission = validCommissions[0];
+    for (const commission of commissions) {
+      const newStudentCount = commission.students.length + totalStudents;
+      const newMasculinoCount = commission.masculinoCount + totalMasculino;
 
-      for (const unit of affinityUnits) {
-        assignUnitToCommission(unit, targetCommission);
+      // Calculate what would be the new max/min after this assignment
+      const tempCounts = commissions.map(c =>
+        c === commission ? newStudentCount : c.students.length
+      );
+      const tempMasculinoCounts = commissions.map(c =>
+        c === commission ? newMasculinoCount : c.masculinoCount
+      );
+
+      const maxStudentsAfter = Math.max(...tempCounts);
+      const minStudentsAfter = Math.min(...tempCounts);
+      const maxMasculinoAfter = Math.max(...tempMasculinoCounts);
+      const minMasculinoAfter = Math.min(...tempMasculinoCounts);
+
+      // Check if assignment would violate ±2 constraints
+      const violatesStudentBalance = (maxStudentsAfter - minStudentsAfter) > 2;
+      const violatesGenderBalance = totalMasculino > 0 && (maxMasculinoAfter - minMasculinoAfter) > 2;
+
+      if (!violatesStudentBalance && !violatesGenderBalance) {
+        // Safe to assign entire group together!
+        for (const unit of affinityUnits) {
+          assignUnitToCommission(unit, commission);
+        }
+        groupAssigned = true;
+        break;
       }
-    } else {
-      // Best effort: distribute among commissions
-      for (const unit of affinityUnits) {
+    }
+
+    // If we couldn't keep the group together, distribute by subgroups
+    if (!groupAssigned) {
+      // Sort subgroups by score to distribute evenly
+      const sortedSubgroups = [...affinityUnits].sort((a, b) => b.totalScore - a.totalScore);
+
+      for (const unit of sortedSubgroups) {
         const validComms = getValidCommissionsForUnit(unit, commissions);
         if (validComms.length > 0) {
           assignUnitToCommission(unit, validComms[0]);
